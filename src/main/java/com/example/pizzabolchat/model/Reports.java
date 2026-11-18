@@ -17,7 +17,7 @@ import java.time.OffsetDateTime;
 @Setter
 @ToString
 @NoArgsConstructor
-public class Report extends BaseEntity {
+public class Reports extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
