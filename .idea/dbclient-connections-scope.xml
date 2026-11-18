@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DbClientConnectionScopeFilter">
+    <option name="entries">
+      <list>
+        <ConnectionScopeStateEntry>
+          <option name="connectionId" value="02a42168-6130-45a2-a2b3-a07c1e8a0e57" />
+          <option name="visibleDatabases">
+            <list>
+              <option value="pizabolchat_db" />
+            </list>
+          </option>
+        </ConnectionScopeStateEntry>
+      </list>
+    </option>
+  </component>
+</project>
