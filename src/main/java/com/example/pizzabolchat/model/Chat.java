@@ -1,16 +1,10 @@
-package com.example.pizabolchat.model;
+package com.example.pizzabolchat.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
-//create table chats(
-//        id serial primary key,
-//        status type_status_chat default 'active',
-//        started_at timestamptz default now(),
-//        ended_at timestamptz
-//);
 
 @Entity
 @Table(name = "chats")

@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>grom</groupId>
-    <artifactId>pizabolchat</artifactId>
+    <artifactId>pizzabolchat</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>pizabolchat</name>
     <description>Spring Boot project</description>

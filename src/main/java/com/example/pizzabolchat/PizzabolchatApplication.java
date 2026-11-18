@@ -1,13 +1,13 @@
-package com.example.pizabolchat;
+package com.example.pizzabolchat;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PizabolchatApplication {
+public class PizzabolchatApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PizabolchatApplication.class, args);
+        SpringApplication.run(PizzabolchatApplication.class, args);
     }
 
 }

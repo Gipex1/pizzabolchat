@@ -1,4 +1,4 @@
-package com.example.pizabolchat.model;
+package com.example.pizzabolchat.model;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
