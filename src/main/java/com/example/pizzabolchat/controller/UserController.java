@@ -3,7 +3,7 @@ package com.example.pizzabolchat.controller;
 import com.example.pizzabolchat.dto.LogUser;
 import com.example.pizzabolchat.dto.RegUser;
 import com.example.pizzabolchat.model.User;
-import com.example.pizzabolchat.server.UserService;
+import com.example.pizzabolchat.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
