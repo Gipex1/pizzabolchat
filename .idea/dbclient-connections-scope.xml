@@ -4,10 +4,22 @@
     <option name="entries">
       <list>
         <ConnectionScopeStateEntry>
-          <option name="connectionId" value="02a42168-6130-45a2-a2b3-a07c1e8a0e57" />
+          <option name="connectionId" value="85c5258a-f3a1-45ef-bab3-44d71900becd" />
+          <option name="perDatabaseSchemas">
+            <list>
+              <DatabaseSchemaListing>
+                <option name="database" value="pizzabolchat_db" />
+                <option name="visibleSchemas">
+                  <list>
+                    <option value="public" />
+                  </list>
+                </option>
+              </DatabaseSchemaListing>
+            </list>
+          </option>
           <option name="visibleDatabases">
             <list>
-              <option value="pizabolchat_db" />
+              <option value="pizzabolchat_db" />
             </list>
           </option>
         </ConnectionScopeStateEntry>
