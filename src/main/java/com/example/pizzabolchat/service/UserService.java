@@ -6,81 +6,144 @@ import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.repository.ProfileRepository;
 import com.example.pizzabolchat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor // <-- ВАЖНО: эта аннотация создает конструктор сама
+@RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
+    // Регистрация
     @Transactional
     public User register(RegUser req) {
-        if (repository.findByEmail(req.getEmail()) != null) {
+        if (userRepository.findByEmail(req.getEmail()) != null) {
             throw new RuntimeException("Email уже занят");
         }
 
-        User u = new User();
-        u.setEmail(req.getEmail());
-        u.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        u = repository.save(u);
+        User user = new User();
+        user.setEmail(req.getEmail());
+        user.setPasswordHash(
+                passwordEncoder.encode(req.getPassword())
+        );
+
+        user = userRepository.save(user);
 
         Profile profile = new Profile();
-        profile.setUser(u);
+        profile.setUser(user);
         profile.setUsername(req.getEmail().split("@")[0]);
         profile.setAvatarUrl("#");
         profile.setRating(BigDecimal.ZERO);
+
         profileRepository.save(profile);
 
-        return u;
+        return user;
     }
 
+    // Авторизация
     public String login(String email, String password) {
-        User user = repository.findByEmail(email);
-        if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+        User user = userRepository.findByEmail(email);
+
+        if (user == null ||
+                !passwordEncoder.matches(
+                        password,
+                        user.getPasswordHash()
+                )) {
             throw new RuntimeException("Неверный email или пароль");
         }
+
         return UUID.randomUUID().toString();
     }
 
-    // Получить всех пользователей (для админки)
-    public java.util.List<User> getAllUsers() {
-        return repository.findAll();
+    // Получить всех пользователей
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
-    // Получить одного пользователя по ID
+    // Получить пользователя по ID
+    @Transactional(readOnly = true)
     public User getUserById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Пользователь не найден")
+                );
     }
 
-    // Обновить email пользователя
+    // Изменить email
     @Transactional
-    public User updateUser(Long id, String newEmail) {
+    public User updateEmail(Long id, String newEmail) {
         User user = getUserById(id);
 
-        // Проверяем, не занят ли новый email
-        User existing = repository.findByEmail(newEmail);
-        if (existing != null && !existing.getId().equals(id)) {
-            throw new RuntimeException("Этот email уже занят другим пользователем");
+        User existing = userRepository.findByEmail(newEmail);
+
+        if (existing != null &&
+                !existing.getId().equals(id)) {
+            throw new RuntimeException("Этот email уже занят");
         }
 
         user.setEmail(newEmail);
-        return repository.save(user);
+        return userRepository.save(user);
     }
 
-    // Удалить пользователя
+    // Изменить пароль
     @Transactional
-    public void deleteUser(Long id) {
+    public void changePassword(
+            Long id,
+            String oldPassword,
+            String newPassword
+    ) {
         User user = getUserById(id);
-        repository.delete(user); // Профиль удалится сам (ON DELETE CASCADE)
+
+        if (!passwordEncoder.matches(
+                oldPassword,
+                user.getPasswordHash()
+        )) {
+            throw new RuntimeException("Неверный текущий пароль");
+        }
+
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new RuntimeException(
+                    "Пароль должен содержать минимум 8 символов"
+            );
+        }
+
+        user.setPasswordHash(
+                passwordEncoder.encode(newPassword)
+        );
+    }
+
+    // Удалить аккаунт
+    @Transactional
+    public void deleteAccount(Long id, String password) {
+        User user = getUserById(id);
+
+        if (!passwordEncoder.matches(
+                password,
+                user.getPasswordHash()
+        )) {
+            throw new RuntimeException("Неверный пароль");
+        }
+
+        userRepository.delete(user);
+    }
+
+    @Transactional(readOnly = true)
+    public User getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("Пользователь не найден");
+        }
+
+        return user;
     }
 }

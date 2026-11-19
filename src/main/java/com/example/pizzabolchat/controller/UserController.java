@@ -1,57 +1,134 @@
 package com.example.pizzabolchat.controller;
 
-import com.example.pizzabolchat.dto.LogUser;
-import com.example.pizzabolchat.dto.RegUser;
+import com.example.pizzabolchat.dto.*;
 import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
+    // Регистрация + автоматическая авторизация
     @PostMapping("/register")
-    public Map<String, Long> register(@RequestBody RegUser req) {
-        User u = userService.register(req);
-        return Map.of("userId", u.getId());
+    public ResponseEntity<AuthResponse> register(
+            @RequestBody RegUser request
+    ) {
+        User user = userService.register(request);
+
+        String token = userService.login(
+                request.getEmail(),
+                request.getPassword()
+        );
+
+        AuthResponse response = new AuthResponse(
+                user.getId(),
+                user.getEmail(),
+                token
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
+    // Авторизация
     @PostMapping("/login")
-    public LogUser login(@RequestBody RegUser req){
-        String token = userService.login(req.getEmail(), req.getPassword());
-        return new LogUser(token, req.getEmail());
+    public ResponseEntity<AuthResponse> login(
+            @RequestBody LoginRequest request
+    ) {
+        String token = userService.login(
+                request.email(),
+                request.password()
+        );
+
+        User user = userService.getUserByEmail(request.email());
+
+        return ResponseEntity.ok(
+                new AuthResponse(
+                        user.getId(),
+                        user.getEmail(),
+                        token
+                )
+        );
     }
 
-    // GET: Получить всех юзеров
+    // Получить всех пользователей
     @GetMapping
-    public java.util.List<User> getAll() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
+        List<Map<String, Object>> users =
+                userService.getAllUsers().stream()
+                        .map(user -> Map.<String, Object>of(
+                                "id", user.getId(),
+                                "email", user.getEmail()
+                        ))
+                        .toList();
+
+        return ResponseEntity.ok(users);
     }
 
-    // GET: Получить одного юзера по ID
+    // Получить пользователя по ID
     @GetMapping("/{id}")
-    public User getOne(@PathVariable Long id) {
-        return userService.getUserById(id);
+    public ResponseEntity<Map<String, Object>> getUserById(
+            @PathVariable Long id
+    ) {
+        User user = userService.getUserById(id);
+
+        return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
+                "email", user.getEmail()
+        ));
     }
 
-    // PUT: Обновить юзера
-    @PutMapping("/{id}")
-    public User update(@PathVariable Long id, @RequestParam String email) {
-        return userService.updateUser(id, email);
+    // Изменить email
+    @PatchMapping("/{id}/email")
+    public ResponseEntity<Map<String, String>> updateEmail(
+            @PathVariable Long id,
+            @RequestBody UpdateEmailRequest request
+    ) {
+        userService.updateEmail(id, request.email());
+
+        return ResponseEntity.ok(
+                Map.of("message", "Email успешно изменён")
+        );
     }
 
-    // DELETE: Удалить юзера
+    // Изменить пароль
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @PathVariable Long id,
+            @RequestBody ChangePasswordRequest request
+    ) {
+        userService.changePassword(
+                id,
+                request.oldPassword(),
+                request.newPassword()
+        );
+
+        return ResponseEntity.ok(
+                Map.of("message", "Пароль успешно изменён")
+        );
+    }
+
+    // Удалить аккаунт
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return "Пользователь с ID " + id + " удален";
+    public ResponseEntity<Map<String, String>> deleteAccount(
+            @PathVariable Long id,
+            @RequestBody DeleteAccountRequest request
+    ) {
+        userService.deleteAccount(id, request.password());
+
+        return ResponseEntity.ok(
+                Map.of("message", "Аккаунт успешно удалён")
+        );
     }
 }
