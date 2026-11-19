@@ -4,15 +4,13 @@ import com.example.pizzabolchat.dto.LogUser;
 import com.example.pizzabolchat.dto.RegUser;
 import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.server.UserService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*")
 public class UserController {
     private final UserService userService;
 
