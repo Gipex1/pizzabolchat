@@ -24,4 +24,8 @@ public class User extends BaseEntity {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private Profile profile;
 }

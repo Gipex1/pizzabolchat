@@ -1,8 +1,10 @@
 package com.example.pizzabolchat.server;
 
 import com.example.pizzabolchat.dto.RegUser;
+import com.example.pizzabolchat.model.Profile;
 import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,17 +17,28 @@ public class UserService {
         this.repository = repository;
     }
 
+    @Transactional // Важно: если профиль не сохранится, юзер тоже откатится
     public User register(RegUser req) {
-        if (req.getEmail() == null || req.getEmail().trim().isEmpty())
-            throw new RuntimeException("Email обязателен");
-        if (req.getPassword() == null || req.getPassword().trim().isEmpty())
-            throw new RuntimeException("Password обязателен");
-        if (repository.findByEmail(req.getEmail()) != null)
+        if (repository.findByEmail(req.getEmail()) != null) {
             throw new RuntimeException("Email уже занят");
-        User u = new User();
-        u.setEmail(req.getEmail());
-        u.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        return repository.save(u);
+        }
+
+        User user = new User();
+        user.setEmail(req.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+
+        // Создаем профиль
+        Profile profile = new Profile();
+        profile.setUser(user);
+        profile.setUsername(req.getEmail().split("@")[0]); // Имя по умолчанию
+        profile.setAvatarUrl("#");
+        profile.setRating(java.math.BigDecimal.ZERO);
+
+        // Привязываем профиль к юзеру
+        user.setProfile(profile);
+
+        // Сохраняем (профиль сохранится сам благодаря CascadeType.ALL)
+        return repository.save(user);
     }
 
     public String login(String email, String password){
