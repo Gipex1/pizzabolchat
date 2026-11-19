@@ -50,4 +50,37 @@ public class UserService {
         }
         return UUID.randomUUID().toString();
     }
+
+    // Получить всех пользователей (для админки)
+    public java.util.List<User> getAllUsers() {
+        return repository.findAll();
+    }
+
+    // Получить одного пользователя по ID
+    public User getUserById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+    }
+
+    // Обновить email пользователя
+    @Transactional
+    public User updateUser(Long id, String newEmail) {
+        User user = getUserById(id);
+
+        // Проверяем, не занят ли новый email
+        User existing = repository.findByEmail(newEmail);
+        if (existing != null && !existing.getId().equals(id)) {
+            throw new RuntimeException("Этот email уже занят другим пользователем");
+        }
+
+        user.setEmail(newEmail);
+        return repository.save(user);
+    }
+
+    // Удалить пользователя
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = getUserById(id);
+        repository.delete(user); // Профиль удалится сам (ON DELETE CASCADE)
+    }
 }

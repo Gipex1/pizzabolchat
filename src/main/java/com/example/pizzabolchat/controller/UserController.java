@@ -29,4 +29,29 @@ public class UserController {
         String token = userService.login(req.getEmail(), req.getPassword());
         return new LogUser(token, req.getEmail());
     }
+
+    // GET: Получить всех юзеров
+    @GetMapping
+    public java.util.List<User> getAll() {
+        return userService.getAllUsers();
+    }
+
+    // GET: Получить одного юзера по ID
+    @GetMapping("/{id}")
+    public User getOne(@PathVariable Long id) {
+        return userService.getUserById(id);
+    }
+
+    // PUT: Обновить юзера
+    @PutMapping("/{id}")
+    public User update(@PathVariable Long id, @RequestParam String email) {
+        return userService.updateUser(id, email);
+    }
+
+    // DELETE: Удалить юзера
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return "Пользователь с ID " + id + " удален";
+    }
 }
