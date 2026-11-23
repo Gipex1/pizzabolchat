@@ -5,9 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
@@ -44,7 +42,6 @@ public class ChatTurn extends BaseEntity {
     @Column(name = "answered_at")
     private OffsetDateTime answeredAt;
 
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status", columnDefinition = "type_status_chat_turns")
     private String status = "waiting";
 

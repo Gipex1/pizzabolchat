@@ -2,8 +2,6 @@ package com.example.pizzabolchat.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +13,6 @@ import java.time.LocalDateTime;
 @ToString
 @NoArgsConstructor
 public class Chat extends BaseEntity {
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(columnDefinition = "type_status_chat")
     private String status = "active";
 
