@@ -30,9 +30,9 @@ public class ChatTurn extends BaseEntity {
     @ToString.Exclude
     private User asker;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "responder_id", nullable = false)
+    @JoinColumn(name = "responder_id")
     @ToString.Exclude
     private User responder;
 

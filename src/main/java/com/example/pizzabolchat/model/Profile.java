@@ -33,4 +33,7 @@ public class Profile extends BaseEntity {
     @Column(name = "rating", precision = 10, scale = 2)
     private BigDecimal rating;
 
+    @Column(name = "tokens", nullable = false)
+    private Integer tokens = 7;
+
 }

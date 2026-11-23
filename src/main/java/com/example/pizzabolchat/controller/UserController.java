@@ -58,6 +58,7 @@ public class UserController {
             response.put("created_at", user.getCreatedAt());
 
             response.put("rating", user.getProfile() != null ? user.getProfile().getRating() : 0.0);
+            response.put("tokens", user.getProfile() != null ? user.getProfile().getTokens() : 7);
 
             return ResponseEntity.ok(response);
         } catch (AuthException e) {
