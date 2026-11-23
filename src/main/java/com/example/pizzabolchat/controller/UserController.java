@@ -1,6 +1,7 @@
 package com.example.pizzabolchat.controller;
 
 import com.example.pizzabolchat.dto.*;
+import com.example.pizzabolchat.exception.AuthException;
 import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -49,11 +50,7 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getMyProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(401).body(Map.of("error", "Токен не передан"));
-            }
-            String token = authHeader.substring(7);
-            User user = userService.getUserByToken(token);
+            User user = userService.getUserByToken(tokenFrom(authHeader));
 
             Map<String, Object> response = new java.util.HashMap<>();
             response.put("id", user.getId());
@@ -73,8 +70,10 @@ public class UserController {
             }
 
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        } catch (AuthException e) {
+            return error(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (RuntimeException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -84,31 +83,75 @@ public class UserController {
             @RequestBody UpdateProfileRequest request
     ) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(401).body(Map.of("error", "Токен не передан"));
-            }
-            userService.updateProfile(authHeader.substring(7), request.username(), request.avatarUrl());
+            userService.updateProfile(tokenFrom(authHeader), request.username(), request.avatarUrl());
             return getMyProfile(authHeader);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        } catch (AuthException e) {
+            return error(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (RuntimeException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
     @PatchMapping("/{id}/email")
-    public ResponseEntity<Map<String, String>> updateEmail(@PathVariable Long id, @RequestBody UpdateEmailRequest request) {
-        userService.updateEmail(id, request.email());
-        return ResponseEntity.ok(Map.of("message", "Email изменён"));
+    public ResponseEntity<?> updateEmail(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody UpdateEmailRequest request
+    ) {
+        try {
+            userService.updateEmailByToken(tokenFrom(authHeader), request.email());
+            return ResponseEntity.ok(Map.of("message", "Email изменён"));
+        } catch (AuthException e) {
+            return error(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (IllegalStateException e) {
+            return error(HttpStatus.CONFLICT, e.getMessage());
+        } catch (RuntimeException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @PatchMapping("/{id}/password")
-    public ResponseEntity<Map<String, String>> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(id, request.oldPassword(), request.newPassword());
-        return ResponseEntity.ok(Map.of("message", "Пароль изменён"));
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody ChangePasswordRequest request
+    ) {
+        try {
+            userService.changePasswordByToken(tokenFrom(authHeader), request.oldPassword(), request.newPassword());
+            return ResponseEntity.ok(Map.of("message", "Пароль изменён"));
+        } catch (AuthException e) {
+            return error(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (IllegalStateException e) {
+            return error(HttpStatus.CONFLICT, e.getMessage());
+        } catch (RuntimeException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteAccount(@PathVariable Long id, @RequestBody DeleteAccountRequest request) {
-        userService.deleteAccount(id, request.password());
-        return ResponseEntity.ok(Map.of("message", "Аккаунт удалён"));
+    public ResponseEntity<?> deleteAccount(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody DeleteAccountRequest request
+    ) {
+        try {
+            userService.deleteAccountByToken(tokenFrom(authHeader), request.password());
+            return ResponseEntity.ok(Map.of("message", "Аккаунт удалён"));
+        } catch (AuthException e) {
+            return error(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (RuntimeException e) {
+            return error(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    private String tokenFrom(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new AuthException("Токен не передан");
+        }
+        return authHeader.substring(7);
+    }
+
+    private ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
+        return ResponseEntity.status(status).body(Map.of("error", message));
     }
 }

@@ -1,6 +1,7 @@
 package com.example.pizzabolchat.service;
 
 import com.example.pizzabolchat.dto.RegUser;
+import com.example.pizzabolchat.exception.AuthException;
 import com.example.pizzabolchat.model.AuthSession;
 import com.example.pizzabolchat.model.Profile;
 import com.example.pizzabolchat.model.User;
@@ -85,14 +86,14 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getUserByToken(String token) {
         if (token == null || token.isBlank()) {
-            throw new RuntimeException("Токен не передан");
+            throw new AuthException("Токен не передан");
         }
 
         AuthSession session = authSessionRepository.findByTokenHash(hashToken(token))
-                .orElseThrow(() -> new RuntimeException("Токен недействителен"));
+                .orElseThrow(() -> new AuthException("Токен недействителен"));
 
         if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(OffsetDateTime.now())) {
-            throw new RuntimeException("Срок действия токена истёк");
+            throw new AuthException("Срок действия токена истёк");
         }
 
         return session.getUser();
@@ -139,20 +140,41 @@ public class UserService {
                 );
     }
 
+    // Изменить email текущего пользователя
+    @Transactional
+    public void updateEmailByToken(String token, String newEmail) {
+        updateEmail(getUserByToken(token).getId(), newEmail);
+    }
+
     // Изменить email
     @Transactional
     public User updateEmail(Long id, String newEmail) {
         User user = getUserById(id);
 
+        if (newEmail == null || !newEmail.trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new IllegalArgumentException("Некорректный email");
+        }
+        newEmail = newEmail.trim();
+
+        if (newEmail.equalsIgnoreCase(user.getEmail())) {
+            return user;
+        }
+
         User existing = userRepository.findByEmail(newEmail);
 
         if (existing != null &&
                 !existing.getId().equals(id)) {
-            throw new RuntimeException("Этот email уже занят");
+            throw new IllegalStateException("Этот email уже занят");
         }
 
         user.setEmail(newEmail);
         return userRepository.save(user);
+    }
+
+    // Изменить пароль текущего пользователя
+    @Transactional
+    public void changePasswordByToken(String token, String oldPassword, String newPassword) {
+        changePassword(getUserByToken(token).getId(), oldPassword, newPassword);
     }
 
     // Изменить пароль
@@ -164,17 +186,21 @@ public class UserService {
     ) {
         User user = getUserById(id);
 
-        if (!passwordEncoder.matches(
+        if (oldPassword == null || !passwordEncoder.matches(
                 oldPassword,
                 user.getPasswordHash()
         )) {
-            throw new RuntimeException("Неверный текущий пароль");
+            throw new IllegalArgumentException("Неверный текущий пароль");
         }
 
-        if (newPassword == null || newPassword.length() < 8) {
-            throw new RuntimeException(
-                    "Пароль должен содержать минимум 8 символов"
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException(
+                    "Пароль должен содержать минимум 6 символов"
             );
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new IllegalStateException("Новый пароль совпадает с текущим");
         }
 
         user.setPasswordHash(
@@ -182,16 +208,22 @@ public class UserService {
         );
     }
 
+    // Удалить аккаунт текущего пользователя
+    @Transactional
+    public void deleteAccountByToken(String token, String password) {
+        deleteAccount(getUserByToken(token).getId(), password);
+    }
+
     // Удалить аккаунт
     @Transactional
     public void deleteAccount(Long id, String password) {
         User user = getUserById(id);
 
-        if (!passwordEncoder.matches(
+        if (password == null || !passwordEncoder.matches(
                 password,
                 user.getPasswordHash()
         )) {
-            throw new RuntimeException("Неверный пароль");
+            throw new IllegalArgumentException("Неверный пароль");
         }
 
         userRepository.delete(user);
