@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @ToString
 @NoArgsConstructor
 public class Chat extends BaseEntity {
-    @Column(columnDefinition = "type_status_chat")
+    @Column(columnDefinition = "varchar(50)")
     private String status = "active";
 
     @Column(name = "started_at", updatable = false)

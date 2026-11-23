@@ -27,6 +27,6 @@ public class MatchingQueue extends BaseEntity {
     @Column(name = "joined_at")
     private OffsetDateTime joinedAt;
 
-    @Column(name = "status", columnDefinition = "type_status_matching")
+    @Column(name = "status", columnDefinition = "varchar(50)")
     private String status;
 }

@@ -43,7 +43,7 @@ public class Reports extends BaseEntity {
     @Column(name = "created_at")
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Column(name = "status", columnDefinition = "type_status_reports")
+    @Column(name = "status", columnDefinition = "varchar(50)")
     private String status = "pending";
 
 }

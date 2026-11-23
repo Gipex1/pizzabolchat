@@ -41,7 +41,7 @@ public class Message extends BaseEntity {
     @Column(name = "created_at")
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Column(name = "message_type", columnDefinition = "type_messages")
+    @Column(name = "message_type", columnDefinition = "varchar(50)")
     private String messageType = "text";
 
 }
