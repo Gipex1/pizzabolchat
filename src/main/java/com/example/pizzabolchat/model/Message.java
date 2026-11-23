@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
@@ -41,6 +43,7 @@ public class Message extends BaseEntity {
     @Column(name = "created_at")
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "message_type", columnDefinition = "type_messages")
     private String messageType = "text";
 
