@@ -49,19 +49,12 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getMyProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Пока токен — это просто UUID. В будущем тут будет JWT.
-            // Если токена нет — возвращаем ошибку
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(401).body(Map.of("error", "Токен не передан"));
             }
             String token = authHeader.substring(7);
+            User user = userService.getUserByToken(token);
 
-            // ВАЖНО: Здесь мы должны найти юзера по токену.
-            // Но у нас токен не сохраняется в базе.
-            // Пока для теста возьмем первого юзера (ID 1)
-            User user = userService.getUserById(1L);
-
-            // Формируем ответ
             Map<String, Object> response = new java.util.HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
@@ -69,17 +62,35 @@ public class UserController {
 
             if (user.getProfile() != null) {
                 response.put("username", user.getProfile().getUsername());
+                response.put("avatarUrl", user.getProfile().getAvatarUrl());
                 response.put("avatar_url", user.getProfile().getAvatarUrl());
                 response.put("rating", user.getProfile().getRating());
             } else {
                 response.put("username", "Без имени");
+                response.put("avatarUrl", "#");
                 response.put("avatar_url", "#");
                 response.put("rating", 0.0);
             }
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateMyProfile(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody UpdateProfileRequest request
+    ) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body(Map.of("error", "Токен не передан"));
+            }
+            userService.updateProfile(authHeader.substring(7), request.username(), request.avatarUrl());
+            return getMyProfile(authHeader);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         }
     }
 

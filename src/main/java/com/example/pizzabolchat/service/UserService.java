@@ -1,8 +1,10 @@
 package com.example.pizzabolchat.service;
 
 import com.example.pizzabolchat.dto.RegUser;
+import com.example.pizzabolchat.model.AuthSession;
 import com.example.pizzabolchat.model.Profile;
 import com.example.pizzabolchat.model.User;
+import com.example.pizzabolchat.repository.AuthSessionRepository;
 import com.example.pizzabolchat.repository.ProfileRepository;
 import com.example.pizzabolchat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.OffsetDateTime;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +27,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final AuthSessionRepository authSessionRepository;
     private final PasswordEncoder passwordEncoder;
 
     // Регистрация
@@ -60,7 +68,60 @@ public class UserService {
             throw new RuntimeException("Неверный email или пароль");
         }
 
-        return UUID.randomUUID().toString();
+        String token = UUID.randomUUID().toString();
+
+        AuthSession session = new AuthSession();
+        session.setUser(user);
+        session.setTokenHash(hashToken(token));
+        OffsetDateTime now = OffsetDateTime.now();
+        session.setCreatedAt(now);
+        session.setExpiresAt(now.plusDays(30));
+        authSessionRepository.save(session);
+
+        return token;
+    }
+
+    // Найти пользователя по токену
+    @Transactional(readOnly = true)
+    public User getUserByToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new RuntimeException("Токен не передан");
+        }
+
+        AuthSession session = authSessionRepository.findByTokenHash(hashToken(token))
+                .orElseThrow(() -> new RuntimeException("Токен недействителен"));
+
+        if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            throw new RuntimeException("Срок действия токена истёк");
+        }
+
+        return session.getUser();
+    }
+
+    // Обновить профиль текущего пользователя
+    @Transactional
+    public void updateProfile(String token, String username, String avatarUrl) {
+        User user = getUserByToken(token);
+        Profile profile = profileRepository.findByUserId(user.getId());
+
+        if (profile == null) {
+            profile = new Profile();
+            profile.setUser(user);
+            profile.setRating(BigDecimal.ZERO);
+        }
+
+        profile.setUsername(username);
+        profile.setAvatarUrl(avatarUrl == null || avatarUrl.isBlank() ? "#" : avatarUrl);
+        profileRepository.save(profile);
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(token.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     // Получить всех пользователей
