@@ -28,11 +28,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public Message<byte[]> handleClientMessageProcessingError(Message<byte[]> clientMessage, Throwable ex) {
                 if (clientMessage == null) {
-                    log.error("STOMP client message processing failed", ex);
+                    log.error("STOMP client message processing failed:\n{}", stackTraceWithoutMessages(ex));
                 } else {
                     StompHeaderAccessor accessor = StompHeaderAccessor.wrap(clientMessage);
-                    log.error("STOMP {} processing failed for destination {}",
-                            accessor.getCommand(), accessor.getDestination(), ex);
+                    log.error("STOMP {} processing failed for destination {}:\n{}",
+                            accessor.getCommand(), accessor.getDestination(), stackTraceWithoutMessages(ex));
                 }
                 return super.handleClientMessageProcessingError(clientMessage, ex);
             }
@@ -55,5 +55,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(authChannelInterceptor);
+    }
+
+    private static String stackTraceWithoutMessages(Throwable error) {
+        StringBuilder trace = new StringBuilder();
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+            trace.append(cause.getClass().getName()).append('\n');
+            for (StackTraceElement element : cause.getStackTrace()) {
+                trace.append("\tat ").append(element).append('\n');
+            }
+        }
+        return trace.toString();
     }
 }

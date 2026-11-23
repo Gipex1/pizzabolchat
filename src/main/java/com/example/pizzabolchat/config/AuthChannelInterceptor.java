@@ -40,7 +40,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
             try {
                 User user = userService.getUserByToken(token);
-                accessor.setUser(new UserPrincipal(user.getId(), user.getEmail()));
+                accessor.setUser(new UserPrincipal(user.getId()));
             } catch (AuthException e) {
                 throw new MessageDeliveryException(e.getMessage());
             }
