@@ -1,22 +1,42 @@
 package com.example.pizzabolchat.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.messaging.StompSubProtocolErrorHandler;
 
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private static final Logger log = LoggerFactory.getLogger(WebSocketConfig.class);
+
     private final AuthChannelInterceptor authChannelInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.setErrorHandler(new StompSubProtocolErrorHandler() {
+            @Override
+            public Message<byte[]> handleClientMessageProcessingError(Message<byte[]> clientMessage, Throwable ex) {
+                if (clientMessage == null) {
+                    log.error("STOMP client message processing failed", ex);
+                } else {
+                    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(clientMessage);
+                    log.error("STOMP {} processing failed for destination {}",
+                            accessor.getCommand(), accessor.getDestination(), ex);
+                }
+                return super.handleClientMessageProcessingError(clientMessage, ex);
+            }
+        });
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
                         "http://109.120.133.51",
