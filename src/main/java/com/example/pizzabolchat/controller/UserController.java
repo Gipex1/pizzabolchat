@@ -57,34 +57,9 @@ public class UserController {
             response.put("email", user.getEmail());
             response.put("created_at", user.getCreatedAt());
 
-            if (user.getProfile() != null) {
-                response.put("username", user.getProfile().getUsername());
-                response.put("avatarUrl", user.getProfile().getAvatarUrl());
-                response.put("avatar_url", user.getProfile().getAvatarUrl());
-                response.put("rating", user.getProfile().getRating());
-            } else {
-                response.put("username", "Без имени");
-                response.put("avatarUrl", "#");
-                response.put("avatar_url", "#");
-                response.put("rating", 0.0);
-            }
+            response.put("rating", user.getProfile() != null ? user.getProfile().getRating() : 0.0);
 
             return ResponseEntity.ok(response);
-        } catch (AuthException e) {
-            return error(HttpStatus.UNAUTHORIZED, e.getMessage());
-        } catch (RuntimeException e) {
-            return error(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
-    }
-
-    @PutMapping("/profile")
-    public ResponseEntity<?> updateMyProfile(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody UpdateProfileRequest request
-    ) {
-        try {
-            userService.updateProfile(tokenFrom(authHeader), request.username(), request.avatarUrl());
-            return getMyProfile(authHeader);
         } catch (AuthException e) {
             return error(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (RuntimeException e) {

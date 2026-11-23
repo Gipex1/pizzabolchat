@@ -99,23 +99,6 @@ public class UserService {
         return session.getUser();
     }
 
-    // Обновить профиль текущего пользователя
-    @Transactional
-    public void updateProfile(String token, String username, String avatarUrl) {
-        User user = getUserByToken(token);
-        Profile profile = profileRepository.findByUserId(user.getId());
-
-        if (profile == null) {
-            profile = new Profile();
-            profile.setUser(user);
-            profile.setRating(BigDecimal.ZERO);
-        }
-
-        profile.setUsername(username);
-        profile.setAvatarUrl(avatarUrl == null || avatarUrl.isBlank() ? "#" : avatarUrl);
-        profileRepository.save(profile);
-    }
-
     private String hashToken(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
