@@ -41,6 +41,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         });
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
+                        "https://pizzabolchat.ru",
+                        "https://www.pizzabolchat.ru",
                         "http://109.120.133.51",
                         "http://localhost:*",
                         "http://127.0.0.1:*")
@@ -48,6 +50,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/anonchat/ws")
                 .addInterceptors(anonymousChatHandshakeInterceptor)
                 .setAllowedOriginPatterns(
+                        "https://pizzabolchat.ru",
+                        "https://www.pizzabolchat.ru",
                         "http://109.120.133.51",
                         "http://localhost:*",
                         "http://127.0.0.1:*")

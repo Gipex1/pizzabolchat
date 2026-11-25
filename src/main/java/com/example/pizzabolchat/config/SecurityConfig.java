@@ -44,6 +44,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of(
+                "https://pizzabolchat.ru",
+                "https://www.pizzabolchat.ru",
                 "http://109.120.133.51",
                 "http://localhost:*",
                 "http://127.0.0.1:*"
