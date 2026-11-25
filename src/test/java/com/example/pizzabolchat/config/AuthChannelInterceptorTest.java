@@ -1,5 +1,6 @@
 package com.example.pizzabolchat.config;
 
+import com.example.pizzabolchat.anonchat.AnonymousChatHandshakeInterceptor;
 import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.service.UserService;
 import org.junit.jupiter.api.Test;
