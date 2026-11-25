@@ -25,6 +25,10 @@ public class SecurityConfig {
                 // 2. Отключаем CSRF (защиту от подделки запросов, для REST API она не нужна)
                 .csrf(AbstractHttpConfigurer::disable)
 
+                // Приложение использует собственные токены, а не HTTP Basic или форму Spring Security.
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+
                 // 3. Настраиваем правила доступа
                 .authorizeHttpRequests(auth -> auth
                         // Разрешаем всем желающим регистрироваться и логиниться
