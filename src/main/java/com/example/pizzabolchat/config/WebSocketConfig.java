@@ -1,13 +1,14 @@
 package com.example.pizzabolchat.config;
 
+import com.example.pizzabolchat.anonchat.AnonymousChatHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -21,6 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private static final Logger log = LoggerFactory.getLogger(WebSocketConfig.class);
 
     private final AuthChannelInterceptor authChannelInterceptor;
+    private final AnonymousChatHandshakeInterceptor anonymousChatHandshakeInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -38,6 +40,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             }
         });
         registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns(
+                        "http://109.120.133.51",
+                        "http://localhost:*",
+                        "http://127.0.0.1:*")
+                .withSockJS();
+        registry.addEndpoint("/anonchat/ws")
+                .addInterceptors(anonymousChatHandshakeInterceptor)
                 .setAllowedOriginPatterns(
                         "http://109.120.133.51",
                         "http://localhost:*",

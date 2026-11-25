@@ -9,8 +9,11 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,5 +39,19 @@ class AuthChannelInterceptorTest {
         assertNotNull(resultAccessor.getUser());
         assertEquals("7", resultAccessor.getUser().getName());
         verify(user, never()).getEmail();
+    }
+
+    @Test
+    void anonymousChatConnectSkipsAccountAuthentication() {
+        UserService userService = mock(UserService.class);
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECT);
+        accessor.setSessionAttributes(Map.of(AnonymousChatHandshakeInterceptor.SESSION_ATTRIBUTE, true));
+        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+
+        Message<?> result = new AuthChannelInterceptor(userService)
+                .preSend(message, mock(MessageChannel.class));
+
+        assertSame(message, result);
+        verify(userService, never()).getUserByToken(org.mockito.ArgumentMatchers.anyString());
     }
 }

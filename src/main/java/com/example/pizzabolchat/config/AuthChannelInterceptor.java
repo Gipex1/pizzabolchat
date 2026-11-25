@@ -1,6 +1,7 @@
 package com.example.pizzabolchat.config;
 
 import com.example.pizzabolchat.exception.AuthException;
+import com.example.pizzabolchat.anonchat.AnonymousChatHandshakeInterceptor;
 import com.example.pizzabolchat.model.User;
 import com.example.pizzabolchat.security.UserPrincipal;
 import com.example.pizzabolchat.service.UserService;
@@ -14,6 +15,8 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class AuthChannelInterceptor implements ChannelInterceptor {
@@ -25,6 +28,12 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+            Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+            if (sessionAttributes != null
+                    && Boolean.TRUE.equals(sessionAttributes.get(AnonymousChatHandshakeInterceptor.SESSION_ATTRIBUTE))) {
+                return message;
+            }
+
             String token = accessor.getFirstNativeHeader("token");
 
             if (token == null) {
