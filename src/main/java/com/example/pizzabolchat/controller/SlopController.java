@@ -5,6 +5,7 @@ import com.example.pizzabolchat.dto.SlopDtos.AskRequest;
 import com.example.pizzabolchat.dto.SlopDtos.RateRequest;
 import com.example.pizzabolchat.exception.AuthException;
 import com.example.pizzabolchat.model.User;
+import com.example.pizzabolchat.service.RatingService;
 import com.example.pizzabolchat.service.SlopService;
 import com.example.pizzabolchat.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class SlopController {
 
     private final SlopService slopService;
     private final UserService userService;
+
+    private final RatingService ratingService;
 
     @PostMapping
     public ResponseEntity<?> ask(
@@ -125,8 +128,11 @@ public class SlopController {
             @RequestBody RateRequest request
     ) {
         try {
-            slopService.rate(current(authHeader), messageId, request.like());
-            return ResponseEntity.ok(Map.of("message", "Оценка сохранена"));
+            String token = authHeader.substring(7);
+            User currentUser = userService.getUserByToken(token);
+
+            ratingService.rateMessage(currentUser, messageId, request.like());
+            return ResponseEntity.ok(Map.of("massage", "Оценка сохранена"));
         } catch (AuthException e) {
             return error(HttpStatus.UNAUTHORIZED, e.getMessage());
         } catch (IllegalStateException e) {
